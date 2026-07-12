@@ -1,0 +1,165 @@
+@import 'tailwindcss';
+
+/* Tokens do Fable — fonte: DESIGN - Fable.md. Não hardcodar hex fora daqui. */
+@theme {
+  --color-fable-forest: #064c37;
+  --color-storybook-sky: #43a1d7;
+  --color-paper-cream: #f7f4ee;
+  --color-ink: #161015;
+  --color-charcoal-plum: #292229;
+  --color-graphite: #3f383d;
+  --color-char: #070607;
+  --color-pure-white: #ffffff;
+  --color-fog: #ededed;
+
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
+
+  --radius-pill: 60px;
+
+  --shadow-lift: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-cover: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@layer base {
+  body {
+    @apply bg-pure-white font-sans text-graphite;
+    letter-spacing: -0.02em; /* tracking editorial do Inter (≈ -0.32px em 16px) */
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-ink;
+    letter-spacing: 0;
+  }
+}
+
+/*
+ * Tokens de tema da Reading Surface (Paper/Dark) — escopo exclusivo do reader,
+ * não usar fora dele. Paper deriva dos tokens Fable; Dark é "modo leitura
+ * noturna" (quente, sem azul neon). Ver Sprint 2 / CLAUDE.md.
+ */
+:root {
+  --reader-bg: #f7f4ee;
+  --reader-bg-translucent: rgb(247 244 238 / 90%);
+  --reader-page-bg: #ffffff;
+  --reader-ink: #161015;
+  --reader-ink-80: rgb(22 16 21 / 80%);
+  --reader-ink-70: rgb(22 16 21 / 70%);
+  --reader-ink-60: rgb(22 16 21 / 60%);
+  --reader-ink-50: rgb(22 16 21 / 50%);
+  --reader-ink-40: rgb(22 16 21 / 40%);
+  --reader-ink-25: rgb(22 16 21 / 25%);
+  --reader-control-hover: rgb(22 16 21 / 6%);
+  --reader-border: rgb(22 16 21 / 10%);
+  --reader-border-strong: rgb(22 16 21 / 25%);
+  --reader-error: #a3392a;
+}
+
+.reader-dark {
+  --reader-bg: #1c1a17;
+  --reader-bg-translucent: rgb(28 26 23 / 90%);
+  --reader-page-bg: #26231f;
+  --reader-ink: #ece5d8;
+  --reader-ink-80: rgb(236 229 216 / 80%);
+  --reader-ink-70: rgb(236 229 216 / 70%);
+  --reader-ink-60: rgb(236 229 216 / 60%);
+  --reader-ink-50: rgb(236 229 216 / 50%);
+  --reader-ink-40: rgb(236 229 216 / 40%);
+  --reader-ink-25: rgb(236 229 216 / 25%);
+  --reader-control-hover: rgb(236 229 216 / 8%);
+  --reader-border: rgb(236 229 216 / 12%);
+  --reader-border-strong: rgb(236 229 216 / 28%);
+  --reader-error: #e08a76;
+}
+
+/*
+ * Botões da Reading Surface: hover via CSS puro (fora de @layer) porque
+ * classes Tailwind arbitrary-value com var() não reagem à troca de tema
+ * neste ambiente — ver comentário em ReaderTopBar.tsx.
+ */
+.reader-btn:hover:not(:disabled) {
+  background-color: var(--reader-control-hover);
+  color: var(--reader-ink);
+}
+
+/* Foco visível temático (Paper/Dark) para controles interativos da Reading Surface */
+.reader-focusable:focus-visible {
+  outline: 2px solid var(--reader-ink-60);
+  outline-offset: 2px;
+}
+
+/* Painel de notas: reserva espaço da página apenas onde ele não vira drawer full-width */
+.notes-open {
+  padding-right: 0;
+}
+
+@media (min-width: 640px) {
+  .notes-open {
+    padding-right: var(--notes-panel-width, 320px);
+  }
+}
+
+/* Crossfade do snapshot → render real na Reading Surface (sem flash) */
+@keyframes snapshot-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.snapshot-fading {
+  animation: snapshot-fade 220ms ease-out forwards;
+}
+
+/* Transição sutil ao virar página (crossfade curto + micro-scale) */
+@keyframes page-turn {
+  from {
+    opacity: 0.55;
+    transform: scale(0.997);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.page-turn {
+  animation: page-turn 150ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snapshot-fading,
+  .page-turn {
+    animation: none;
+  }
+}
+
+/*
+ * Text layer do pdf.js (Sprint 9 — highlights textuais, feature estável).
+ * Réplica mínima do CSS oficial (text_layer_builder.css) — spans
+ * transparentes posicionados sobre o canvas, visíveis apenas via seleção. Só
+ * é montado quando "modo seleção" está ativo (ver ARCHITECTURE.md).
+ */
+.text-layer {
+  overflow: hidden;
+  line-height: 1;
+  opacity: 1;
+}
+
+.text-layer span,
+.text-layer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+.text-layer ::selection {
+  background: rgba(67, 161, 215, 0.35); /* --color-storybook-sky translúcido */
+}
