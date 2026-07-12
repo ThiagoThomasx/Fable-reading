@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spike PDF.js — Sprint 0</title>
+    <style>
+      :root {
+        --paper-cream: #f7f4ee;
+        --ink: #161015;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: var(--paper-cream);
+        color: var(--ink);
+      }
+      #toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 16px;
+        border-bottom: 1px solid rgba(22, 16, 21, 0.15);
+        flex-wrap: wrap;
+      }
+      #toolbar button { padding: 6px 12px; cursor: pointer; }
+      #stage {
+        display: flex;
+        justify-content: center;
+        padding: 16px;
+      }
+      #page-canvas {
+        max-width: 100%;
+        height: auto;
+        box-shadow: 0 2px 12px rgba(22, 16, 21, 0.18);
+        background: white;
+      }
+      #metrics {
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        padding: 8px 16px;
+        background: rgba(22, 16, 21, 0.05);
+        max-height: 260px;
+        overflow: auto;
+      }
+      #jank-box {
+        width: 24px;
+        height: 24px;
+        background: #2f6f4f;
+        border-radius: 4px;
+        animation: spin 1.2s linear infinite;
+        margin-left: auto;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      #status { font-size: 13px; opacity: 0.75; }
+    </style>
+  </head>
+  <body>
+    <div id="toolbar">
+      <select id="pdf-select">
+        <option value="/pdfs/leve.pdf">Leve — A metamorfose (9.1MB, 94p)</option>
+        <option value="/pdfs/pesado.pdf">Pesado — Electrical Engineering (89.3MB, 915p)</option>
+        <option value="/pdfs/escaneado.pdf">Escaneado — Present Conflict of Ideals (44.6MB, 458p)</option>
+      </select>
+      <button id="btn-open">Abrir</button>
+      <button id="btn-prev">◀ Anterior</button>
+      <button id="btn-next">Próxima ▶</button>
+      <span id="page-indicator">—</span>
+      <button id="btn-bench">Rodar benchmark completo</button>
+      <span id="status"></span>
+      <div id="jank-box" title="Se este quadrado engasgar, a main thread travou"></div>
+    </div>
+    <div id="stage"><canvas id="page-canvas"></canvas></div>
+    <div id="metrics"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
