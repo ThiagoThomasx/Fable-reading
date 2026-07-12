@@ -415,6 +415,42 @@ testes automatizados e o build continuam verdes após a correção.
 
 ---
 
+## Sprint 17 — Deploy & Release Validation
+
+Validado em produção real (`https://app-wheat-three-52.vercel.app`), não em preview/dev, via
+Browser pane. Massa de QA: 1 livro PDF sintético cadastrado do zero direto no domínio real.
+
+- [x] `git status` limpo, `origin` alcançável e vazio antes do push (`git ls-remote` sem erro,
+      sem refs) — sem risco de sobrescrever histórico existente
+- [x] `git push -u origin main` e `git push origin v0.1.0-rc1` completam sem erro; branch remoto
+      criado, tag visível no remoto
+- [x] `vercel --prod` completa com `readyState: "READY"`, build remoto roda
+      `tsc --noEmit && vite build` sem erro
+- [x] App carrega no domínio de produção sem erro de console; todos os assets (`JS`/`CSS`/fontes/
+      worker) retornam `200`
+- [x] `indexedDB.databases()` no domínio real confirma o banco `readquest` v4 com as 5 stores
+      esperadas (`books`/`files`/`notes`/`reviews`/`sessions`)
+- [x] Upload de PDF (via `File`/`DataTransfer` sintético — Browser pane não expõe picker nativo)
+      → pdf.js abre, extrai página/capa, cadastro completo sem erro
+- [x] Reader abre a página real (worker carregado, canvas renderizado, "Página 1 de 1")
+- [x] Criar nota de página e bookmark no painel lateral → ambos persistem e aparecem na lista
+- [x] Sessão de leitura capturada automaticamente e visível no Dashboard (tempo, atividade 7
+      dias, atividade recente, livro mais ativo)
+- [x] "Verificar integridade" retorna "Tudo certo — nenhum problema encontrado"
+- [x] "Exportar backup" gera o arquivo (capturado via hook em `URL.createObjectURL` para
+      validação, já que o Browser pane não acessa a pasta de Downloads real) com as contagens
+      corretas (1 livro, 1 arquivo, 1 sessão, 2 anotações, 0 reviews)
+- [x] Restaurar esse mesmo backup (via input de restore) → parsing/validação corretos, resumo do
+      conteúdo exibido, confirmação com checkbox, restore completa e recarrega a página
+      automaticamente, estado idêntico antes/depois, sem erro de console
+- [x] "Assistente IA" (gerador de contexto) não dispara nenhuma chamada de rede
+- [x] "Chat IA (spike)" abre com "Provider ativo: Mock (local, sem rede)" por padrão; enviar uma
+      pergunta em modo mock não gera nenhuma requisição de rede nova
+      (`read_network_requests` idêntico antes/depois do envio)
+- [x] Nenhum erro no console do navegador durante toda a validação em produção
+
+---
+
 ## Checklist transversal (rodar a cada sprint, não só a específica)
 
 - [ ] Nenhuma regressão nos critérios de performance da Sprint 0/1 (abrir DevTools → Performance)

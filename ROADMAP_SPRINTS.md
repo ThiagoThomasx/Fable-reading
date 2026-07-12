@@ -550,6 +550,81 @@ mexer no reader core, sem novo escopo de IA.
       `ROADMAP_SPRINTS.md` — sem timestamps reais de cada sprint, já que o repositório nunca teve
       commits antes desta sprint)
 
+## Sprint 17 (fora de sequência) — Deploy & Release Validation
+
+**Objetivo:** publicar e validar o ReadQuest `v0.1.0-rc1` num ambiente real (fora do preview/dev),
+confirmando que build de produção, IndexedDB, upload/leitura de PDF, backup/restore, notes/
+highlights/sessions/reviews e o gate de IA opt-in funcionam idênticos ao preview quando servidos
+por um domínio HTTPS real. Sem feature nova, sem mexer no reader core, sem novo escopo de IA.
+
+> Nota de numeração: mesma situação das sprints "fora de sequência" anteriores — pedida como
+> "Sprint 17" pela instrução que a originou, seguindo diretamente a Sprint 16.
+
+- [x] Auditoria inicial: `git status` limpo, `master` = tag `v0.1.0-rc1` (16 commits); `origin`
+      já configurado (`github.com/ThiagoThomasx/Fable-reading`) mas remoto **vazio** (zero refs,
+      `git ls-remote` sem erro) — nenhum risco de sobrescrita; `npm run build`
+      (`tsc --noEmit && vite build`) e `npm run test` (268 testes) verdes localmente antes de
+      qualquer alteração; nenhum `README`/CI/config de deploy pré-existente
+      (`.github/workflows`, `vercel.json`, `netlify.toml`, `Dockerfile`)
+- [x] Branch local renomeado `master` → `main` (decisão do usuário, alinhado ao padrão atual do
+      GitHub); `git push -u origin main` e `git push origin v0.1.0-rc1` — histórico completo e a
+      tag agora no remoto
+- [x] Deploy via Vercel CLI (já autenticado na máquina do usuário): `app/` linkado como root do
+      projeto Vercel (`thiago-thomas-projects/app`), detecção automática de Vite
+      (`vite build` → `dist/`), `vercel --prod` — produção em
+      `https://app-wheat-three-52.vercel.app`
+- [x] Build de produção real no Vercel (não just local) verificado: `tsc --noEmit && vite build`
+      rodou limpo no build remoto, mesmos chunks/tamanhos do build local (`pdf-engine` 366KB/
+      108KB gzip, code-split de `PdfReader`/`AiChat`/`AiAssistant`/`Dashboard`/`GlobalSearch`
+      preservado)
+- [x] Validação manual no domínio real via Browser pane (app estático sem rotas de URL — sem
+      necessidade de rewrite/fallback SPA no Vercel):
+      - App carrega sem erros de console; todos os assets `200`
+      - `indexedDB.databases()` confirma banco `readquest` v4 com as 5 stores esperadas
+        (`books`/`files`/`notes`/`reviews`/`sessions`) no domínio `vercel.app`
+      - Upload de PDF sintético (gerado em memória via `DataTransfer`, já que o Browser pane não
+        expõe picker nativo de arquivo) → pdf.js abriu, extraiu capa, cadastro completo
+      - Reader abriu a página real (worker `pdf.worker.min.mjs` carregado, canvas renderizado,
+        "Página 1 de 1")
+      - Nota de página + bookmark criados e persistidos no painel lateral; sessão de leitura
+        capturada automaticamente e visível no Dashboard (tempo, atividade de 7 dias, atividade
+        recente, livro mais ativo)
+      - "Dados e segurança": "Verificar integridade" → "Tudo certo"; **round-trip real de
+        backup/restore** (blob exportado pela própria função de export interceptado via hook em
+        `URL.createObjectURL`, então injetado de volta no input de restore) → reload automático,
+        estado idêntico antes/depois, sem erro de console
+      - Gate de IA: "Chat IA (spike)" abriu com **"Provider ativo: Mock (local, sem rede)"** por
+        padrão; pergunta enviada em modo mock não gerou nenhuma requisição de rede nova
+        (`read_network_requests` antes/depois idêntico); "Assistente IA" (gerador de contexto)
+        também 100% local
+      - Zero erros de console em qualquer etapa da validação
+- [x] Documentação: `CHANGELOG.md`/`ROADMAP_SPRINTS.md`/`QA_CHECKLIST.md` atualizados com o
+      resultado desta sprint
+
+### Decisões técnicas (Sprint 17)
+
+- **Deploy direto para produção** (não preview-primeiro): decisão explícita do usuário — o app é
+  100% estático/local-first (sem backend, sem estado compartilhado no servidor), então uma
+  promoção manual posterior preview→produção não reduziria risco real além do que a validação
+  pós-deploy já cobre.
+- **`app/` como root do projeto Vercel** (não `vercel.json` no root do monorepo): mais simples
+  para este layout (app único em subpasta, sem outros serviços no monorepo) e evita manter duas
+  fontes de verdade para build command/output directory.
+- **Sem rewrite SPA no Vercel**: auditoria confirmou que o app não usa nenhuma lib de roteamento
+  por URL (`react-router` ausente, `App.tsx` não lê `location`/`history`) — toda navegação é
+  estado interno (`useUIStore.AppView`), então a raiz estática (`index.html`) é suficiente sem
+  regra de fallback.
+- **Teste de upload de PDF via `DataTransfer` sintético**: o Browser pane usado para validação não
+  expõe o picker nativo de arquivo do SO; construir um `File`/`DataTransfer` em JS e disparar
+  `change` no `<input type="file">` é a forma padrão de testar upload em ambientes automatizados
+  sem acesso ao SO, e exercita exatamente o mesmo caminho de código (`onChange` → parse via
+  pdf.js) que um upload real do usuário.
+- **Teste de restore usando o backup real gerado pela própria UI** (via hook em
+  `URL.createObjectURL`, não um JSON construído à mão): mais fiel que reconstruir o schema
+  manualmente — exercita a serialização real (`createFullBackup`/`serializeBackup`) e a
+  desserialização real (`parseBackupJson`/`validateBackup`/`restoreFullBackup`) juntas, no mesmo
+  domínio de produção.
+
 ---
 
 ## Log de decisões durante a execução

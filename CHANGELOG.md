@@ -650,6 +650,41 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## Sprint 17 (fora de sequência) — Deploy & Release Validation
+
+### Adicionado
+- **Sprint 17 concluída — Deploy & Release Validation** (2026-07-12): primeira publicação do
+  ReadQuest `v0.1.0-rc1` num ambiente real, fora do preview/dev. Sem feature nova, sem mudança de
+  código do reader/tracker/IA.
+  - Branch local renomeado `master` → `main`, histórico completo (16 commits) e a tag
+    `v0.1.0-rc1` enviados para o remoto GitHub já configurado
+    (`github.com/ThiagoThomasx/Fable-reading`), até então vazio.
+  - Deploy em produção via Vercel CLI: `app/` como root do projeto Vercel, build automático
+    (`tsc --noEmit && vite build`), sem `vercel.json`/rewrite SPA (app não usa roteamento por
+    URL). Produção em `https://app-wheat-three-52.vercel.app`.
+
+### Verificado
+- Build de produção rodou limpo no ambiente remoto do Vercel (não só localmente), com os mesmos
+  chunks/code-splitting do build local.
+- Validação manual completa no domínio real via Browser pane: IndexedDB (`readquest` v4, 5
+  stores) funcionando no domínio `vercel.app`; upload e leitura de PDF (worker + canvas
+  renderizando); nota de página + bookmark persistidos; sessão de leitura capturada e visível no
+  Dashboard; verificação de integridade "Tudo certo"; round-trip real de backup/restore (usando o
+  backup de fato gerado pela própria UI, capturado via hook em `URL.createObjectURL`); gate de IA
+  confirmado em modo mock por padrão ("Provider ativo: Mock — local, sem rede"), zero requisições
+  de rede novas ao enviar uma pergunta mock. Zero erros de console em qualquer etapa.
+
+### Decisões técnicas (Sprint 17)
+- Deploy direto para produção (sem etapa de preview manual antes) — decisão do usuário; app é
+  100% estático/local-first, sem estado compartilhado no servidor que justifique uma promoção
+  preview→produção separada da validação pós-deploy.
+- Upload de PDF testado via `File`/`DataTransfer` sintético (o ambiente de validação não expõe o
+  picker nativo do SO) — exercita o mesmo caminho de código do upload real (`onChange` → pdf.js).
+- Restore testado com o backup real produzido pela própria função de export da UI (não um JSON
+  construído à mão) — cobre serialização e desserialização reais juntas, no domínio de produção.
+
+---
+
 ## Como preencher esta seção conforme o projeto avança
 
 Ao concluir uma sprint, adicionar uma nova entrada versionada (ex: `[0.1.0] - 2026-07-20`) com
