@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.vite/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test / coverage artifacts
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# ReadQuest data safety artifacts (local exports/backups, never real user data in the repo)
+*.readquest-backup.json
+readquest-backup*.json
+
+# Real reader PDFs accidentally dropped into the working tree — the app is
+# local-first (IndexedDB in the browser), a PDF on disk here is always a
+# stray, not app state. spike-pdf's own .gitignore already excludes its
+# test fixtures (public/pdfs/); this only guards against new stray spots.
+uploads/
+test-pdfs/
+**/fixtures/**/*.pdf
